@@ -123,4 +123,5 @@ class AuthManager implements BaseAuthUserProvider {
       throw e; // rethrow any other exceptions
     }
   }
+
 }

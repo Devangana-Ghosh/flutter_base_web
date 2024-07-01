@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Ensure this import is still needed in your project
-import 'package:local_auth/local_auth.dart'; // Import for biometric authentication
-import '../auth/firebase_auth/auth_manager.dart'; // Adjust paths as per your project structure
-import '../components/textfield.dart'; // Adjust paths as per your project structure
-import 'forgot_password.dart'; // Adjust paths as per your project structure
-import 'home.dart'; // Adjust paths as per your project structure
-import 'login_phn.dart'; // Adjust paths as per your project structure
-import 'signup.dart'; // Adjust paths as per your project structure
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:local_auth/local_auth.dart';
+import '../auth/firebase_auth/auth_manager.dart';
+import '../components/textfield.dart';
+import 'forgot_password.dart';
+import 'home.dart';
+import 'login_phn.dart';
+import 'signup.dart';
 
 class LogIn extends StatefulWidget {
   const LogIn({Key? key}) : super(key: key);
@@ -20,9 +20,8 @@ class _LogInState extends State<LogIn> {
   final TextEditingController passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final AuthManager _authManager = AuthManager();
-  final LocalAuthentication _localAuthentication = LocalAuthentication(); // Initialize local authentication
+  final LocalAuthentication _localAuthentication = LocalAuthentication();
 
-  // Method to handle user login with email and password
   void userLogin() async {
     if (_formKey.currentState!.validate()) {
       try {
@@ -51,14 +50,14 @@ class _LogInState extends State<LogIn> {
     }
   }
 
-  // Method to handle biometric authentication
+
   Future<void> authenticate() async {
     bool isAuthenticated = false;
 
     try {
       isAuthenticated = await _localAuthentication.authenticate(
-        localizedReason: 'Authenticate to access the app', // Reason shown to the user for authentication
-        // Set other parameters here as needed (e.g., biometricOnly, useErrorDialogs, stickyAuth)
+        localizedReason: 'Authenticate to access the app',
+
       );
     } catch (e) {
       print('Error during biometric authentication: $e');
@@ -220,15 +219,15 @@ class _LogInState extends State<LogIn> {
                   ],
                 ),
               ),
-              SizedBox(height: 40.0), // Spacing between existing UI and biometric button
+              SizedBox(height: 40.0),
               ElevatedButton.icon(
                 onPressed: () async {
-                  await authenticate(); // Call biometric authentication method
+                  await authenticate();
                 },
-                icon: Icon(Icons.fingerprint), // Use fingerprint icon
-                label: Text('Authenticate with Fingerprint'), // Button label
+                icon: Icon(Icons.fingerprint),
+                label: Text('Authenticate with Fingerprint'),
                 style: ElevatedButton.styleFrom(
-                  foregroundColor: Color(0xFF273671), backgroundColor: Colors.white, // Text color
+                  foregroundColor: Color(0xFF273671), backgroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30.0),
                   ),
