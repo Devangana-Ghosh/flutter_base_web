@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:local_auth/local_auth.dart';
-import '../auth/firebase_auth/auth_manager.dart';
+import '../auth/biometric_auth/auth_service.dart';
 import '../components/textfield.dart';
 import 'forgot_password.dart';
-import 'home.dart';
 import 'login_phn.dart';
 import 'signup.dart';
 
@@ -19,59 +16,7 @@ class _LogInState extends State<LogIn> {
   final TextEditingController mailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final AuthManager _authManager = AuthManager();
-  final LocalAuthentication _localAuthentication = LocalAuthentication();
-
-  void userLogin() async {
-    if (_formKey.currentState!.validate()) {
-      try {
-        await _authManager.signInWithEmailAndPassword(
-          mailController.text,
-          passwordController.text,
-        );
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => Home()),
-        );
-      } on FirebaseAuthException catch (e) {
-        String message;
-        if (e.code == 'user-not-found') {
-          message = "No User Found for that Email";
-        } else if (e.code == 'wrong-password') {
-          message = "Wrong Password Provided by User";
-        } else {
-          message = "An error occurred. Please try again.";
-        }
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          backgroundColor: Colors.orangeAccent,
-          content: Text(message, style: TextStyle(fontSize: 18.0)),
-        ));
-      }
-    }
-  }
-
-
-  Future<void> authenticate() async {
-    bool isAuthenticated = false;
-
-    try {
-      isAuthenticated = await _localAuthentication.authenticate(
-        localizedReason: 'Authenticate to access the app',
-
-      );
-    } catch (e) {
-      print('Error during biometric authentication: $e');
-    }
-
-    if (isAuthenticated) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => Home()),
-      );
-    } else {
-      print('Biometric authentication failed');
-    }
-  }
+  final AuthService _authService = AuthService(); // Initialize AuthService
 
   @override
   Widget build(BuildContext context) {
@@ -122,9 +67,12 @@ class _LogInState extends State<LogIn> {
                     SizedBox(height: 30.0),
                     GestureDetector(
                       onTap: () {
-                        if (_formKey.currentState!.validate()) {
-                          userLogin();
-                        }
+                        _authService.userLogin(
+                          context,
+                          _formKey,
+                          mailController.text,
+                          passwordController.text,
+                        );
                       },
                       child: Container(
                         width: MediaQuery.of(context).size.width,
@@ -222,7 +170,7 @@ class _LogInState extends State<LogIn> {
               SizedBox(height: 40.0),
               ElevatedButton.icon(
                 onPressed: () async {
-                  await authenticate();
+                  await _authService.authenticate(context);
                 },
                 icon: Icon(Icons.fingerprint),
                 label: Text('Authenticate with Fingerprint'),
