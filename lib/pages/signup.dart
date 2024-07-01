@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
 import '../auth/firebase_auth/auth_manager.dart';
 import '../components/textfield.dart';
 import 'home.dart';
@@ -16,6 +17,7 @@ class _SignUpState extends State<SignUp> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController mailController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final AuthManager _authManager = AuthManager();
@@ -23,24 +25,36 @@ class _SignUpState extends State<SignUp> {
   void registration() async {
     if (_formKey.currentState!.validate()) {
       try {
-        await _authManager.createUserWithEmailAndPassword(
-            mailController.text, passwordController.text);
+        UserCredential userCredential = await _authManager.createUserWithEmailAndPassword(
+          mailController.text,
+          passwordController.text,
+          nameController.text,
+          phoneController.text,
+        );
+
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text("Registered Successfully", style: TextStyle(fontSize: 20.0)),
         ));
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Home()));
       } on FirebaseAuthException catch (e) {
+        String errorMessage = 'An error occurred';
         if (e.code == 'weak-password') {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            backgroundColor: Colors.orangeAccent,
-            content: Text("Password Provided is too Weak", style: TextStyle(fontSize: 18.0)),
-          ));
-        } else if (e.code == "email-already-in-use") {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            backgroundColor: Colors.orangeAccent,
-            content: Text("Account Already exists", style: TextStyle(fontSize: 18.0)),
-          ));
+          errorMessage = 'The password provided is too weak.';
+        } else if (e.code == 'email-already-in-use') {
+          errorMessage = 'The account already exists for that email.';
+        } else {
+          errorMessage = e.message ?? 'Error during registration';
         }
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          backgroundColor: Colors.redAccent,
+          content: Text(errorMessage, style: TextStyle(fontSize: 18.0)),
+        ));
+      } catch (e) {
+        print(e.toString());
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          backgroundColor: Colors.redAccent,
+          content: Text('Failed to create user: $e', style: TextStyle(fontSize: 18.0)),
+        ));
       }
     }
   }
@@ -70,7 +84,7 @@ class _SignUpState extends State<SignUp> {
                       hintText: "Name",
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please Enter Name';
+                          return 'Please enter your name';
                         }
                         return null;
                       },
@@ -81,7 +95,21 @@ class _SignUpState extends State<SignUp> {
                       hintText: "Email",
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please Enter Email';
+                          return 'Please enter an email address';
+                        } else if (!value.contains('@')) {
+                          return 'Please enter a valid email address';
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 30.0),
+                    CustomTextField(
+                      controller: phoneController,
+                      hintText: "Phone Number",
+                      keyboardType: TextInputType.phone,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your phone number';
                         }
                         return null;
                       },
@@ -93,7 +121,9 @@ class _SignUpState extends State<SignUp> {
                       obscureText: true,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please Enter Password';
+                          return 'Please enter a password';
+                        } else if (value.length < 6) {
+                          return 'Password must be at least 6 characters long';
                         }
                         return null;
                       },
@@ -119,10 +149,6 @@ class _SignUpState extends State<SignUp> {
                 ),
               ),
               SizedBox(height: 30.0),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-              ),
-              SizedBox(height: 40.0),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

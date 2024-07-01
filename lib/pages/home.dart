@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api.dart';
+import 'Profile.dart';
+
 
 class Home extends StatefulWidget {
   @override
@@ -31,6 +33,17 @@ class _HomeState extends State<Home> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Products'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.settings),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ProfileSettings()),
+              );
+            },
+          ),
+        ],
       ),
       body: ListView.builder(
         itemCount: products.length,

@@ -1,4 +1,3 @@
-// lib/components/custom_text_field.dart
 import 'package:flutter/material.dart';
 
 class CustomTextField extends StatelessWidget {
@@ -6,6 +5,7 @@ class CustomTextField extends StatelessWidget {
   final String hintText;
   final IconData? prefixIcon;
   final bool obscureText;
+  final TextInputType? keyboardType; // Add keyboardType parameter
   final String? Function(String?)? validator;
 
   const CustomTextField({
@@ -14,6 +14,7 @@ class CustomTextField extends StatelessWidget {
     required this.hintText,
     this.prefixIcon,
     this.obscureText = false,
+    this.keyboardType, // Nullable TextInputType parameter
     this.validator,
   }) : super(key: key);
 
@@ -28,6 +29,7 @@ class CustomTextField extends StatelessWidget {
       child: TextFormField(
         controller: controller,
         obscureText: obscureText,
+        keyboardType: keyboardType, // Pass keyboardType to TextFormField
         decoration: InputDecoration(
           border: InputBorder.none,
           hintText: hintText,
