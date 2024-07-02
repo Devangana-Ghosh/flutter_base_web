@@ -1,3 +1,4 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import '../auth/biometric_auth/auth_service.dart';
 import '../components/textfield.dart';
@@ -16,7 +17,8 @@ class _LogInState extends State<LogIn> {
   final TextEditingController mailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final AuthService _authService = AuthService(); // Initialize AuthService
+  final AuthService _authService = AuthService();
+  final FirebaseAnalytics _analytics = FirebaseAnalytics.instance;
 
   @override
   Widget build(BuildContext context) {

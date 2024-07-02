@@ -4,6 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'password_reset.dart';
 
+import 'package:firebase_analytics/firebase_analytics.dart';
+
 class ProfileSettings extends StatefulWidget {
   @override
   _ProfileSettingsState createState() => _ProfileSettingsState();
@@ -20,6 +22,7 @@ class _ProfileSettingsState extends State<ProfileSettings> {
 
   User? _user;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
   @override
   void initState() {
@@ -40,6 +43,14 @@ class _ProfileSettingsState extends State<ProfileSettings> {
           ageController.text = snapshot.data()?['age']?.toString() ?? '';
           selectedGender = snapshot.data()?['gender'];
         });
+
+        await analytics.logEvent(
+          name: 'profile_loaded',
+          parameters: {
+            'user_id': _user?.uid ?? '',
+            'email': _user?.email ?? '',
+          },
+        );
       }
     } catch (e) {
       print('Error loading profile: $e');
@@ -48,13 +59,9 @@ class _ProfileSettingsState extends State<ProfileSettings> {
 
   Future<void> _updateProfile() async {
     try {
-      // Update display name in Firebase Authentication
+
       await _user?.updateDisplayName(nameController.text);
-
-      // Update email in Firebase Authentication
       await _user?.updateEmail(emailController.text);
-
-      // Update user profile in Firestore
       await _firestore.collection('users').doc(_user?.uid).update({
         'name': nameController.text,
         'email': emailController.text,
@@ -62,6 +69,18 @@ class _ProfileSettingsState extends State<ProfileSettings> {
         'age': int.tryParse(ageController.text) ?? 0,
         'gender': selectedGender,
       });
+
+      await analytics.logEvent(
+        name: 'profile_updated',
+        parameters: {
+          'user_id': _user?.uid ?? '',
+          'name': nameController.text,
+          'email': emailController.text,
+          'phone': phoneController.text,
+          'age': ageController.text,
+          'gender': selectedGender ?? '',
+        },
+      );
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
 import '../auth/firebase_auth/auth_manager.dart';
 import '../components/textfield.dart';
 import 'home.dart';
 import 'login.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 
 class SignUp extends StatefulWidget {
   const SignUp({Key? key}) : super(key: key);
@@ -21,6 +21,7 @@ class _SignUpState extends State<SignUp> {
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final AuthManager _authManager = AuthManager();
+  final FirebaseAnalytics _analytics = FirebaseAnalytics.instance;
 
   void registration() async {
     if (_formKey.currentState!.validate()) {
@@ -31,6 +32,12 @@ class _SignUpState extends State<SignUp> {
           nameController.text,
           phoneController.text,
         );
+
+        await _analytics.logEvent(name: 'sign_up', parameters: {
+          'email': mailController.text,
+          'name': nameController.text,
+          'phone': phoneController.text,
+        });
 
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text("Registered Successfully", style: TextStyle(fontSize: 20.0)),
