@@ -2,9 +2,11 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import '../auth/biometric_auth/auth_service.dart';
 import '../components/textfield.dart';
+import '../services/firebase_analytics.dart';
 import 'forgot_password.dart';
 import 'login_phn.dart';
 import 'signup.dart';
+
 
 class LogIn extends StatefulWidget {
   const LogIn({Key? key}) : super(key: key);
@@ -22,6 +24,8 @@ class _LogInState extends State<LogIn> {
 
   @override
   Widget build(BuildContext context) {
+    AnalyticsHandler.logScreenView('LogIn');
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
@@ -75,6 +79,7 @@ class _LogInState extends State<LogIn> {
                           mailController.text,
                           passwordController.text,
                         );
+                        AnalyticsHandler.logButtonClick('SignInButton');
                       },
                       child: Container(
                         width: MediaQuery.of(context).size.width,
@@ -102,6 +107,7 @@ class _LogInState extends State<LogIn> {
                           context,
                           MaterialPageRoute(builder: (context) => ForgotPassword()),
                         );
+                        AnalyticsHandler.logButtonClick('ForgotPasswordLink');
                       },
                       child: Text(
                         "Forgot Password?",
@@ -112,11 +118,9 @@ class _LogInState extends State<LogIn> {
                         ),
                       ),
                     ),
-
                     SizedBox(height: 30.0),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-
                     ),
                     SizedBox(height: 20.0),
                     GestureDetector(
@@ -125,6 +129,7 @@ class _LogInState extends State<LogIn> {
                           context,
                           MaterialPageRoute(builder: (context) => LogInWithPhone()),
                         );
+                        AnalyticsHandler.logButtonClick('LogInWithPhoneLink');
                       },
                       child: Text(
                         "LogIn with Phone",
@@ -153,6 +158,7 @@ class _LogInState extends State<LogIn> {
                               context,
                               MaterialPageRoute(builder: (context) => SignUp()),
                             );
+                            AnalyticsHandler.logButtonClick('SignUpLink');
                           },
                           child: Text(
                             "SignUp",
@@ -173,6 +179,7 @@ class _LogInState extends State<LogIn> {
               ElevatedButton.icon(
                 onPressed: () async {
                   await _authService.authenticate(context);
+                  AnalyticsHandler.logButtonClick('FingerprintAuthentication');
                 },
                 icon: Icon(Icons.fingerprint),
                 label: Text('Authenticate with Fingerprint'),

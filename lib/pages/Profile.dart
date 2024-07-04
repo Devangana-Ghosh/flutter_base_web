@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+import '../services/firebase_analytics.dart';
 import 'password_reset.dart';
-
-import 'package:firebase_analytics/firebase_analytics.dart';
 
 class ProfileSettings extends StatefulWidget {
   @override
@@ -22,7 +20,6 @@ class _ProfileSettingsState extends State<ProfileSettings> {
 
   User? _user;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
   @override
   void initState() {
@@ -44,13 +41,10 @@ class _ProfileSettingsState extends State<ProfileSettings> {
           selectedGender = snapshot.data()?['gender'];
         });
 
-        await analytics.logEvent(
-          name: 'profile_loaded',
-          parameters: {
-            'user_id': _user?.uid ?? '',
-            'email': _user?.email ?? '',
-          },
-        );
+        await AnalyticsHandler.logEvent('profile_loaded', parameters: {
+          'user_id': _user?.uid ?? '',
+          'email': _user?.email ?? '',
+        });
       }
     } catch (e) {
       print('Error loading profile: $e');
@@ -59,7 +53,6 @@ class _ProfileSettingsState extends State<ProfileSettings> {
 
   Future<void> _updateProfile() async {
     try {
-
       await _user?.updateDisplayName(nameController.text);
       await _user?.updateEmail(emailController.text);
       await _firestore.collection('users').doc(_user?.uid).update({
@@ -70,17 +63,16 @@ class _ProfileSettingsState extends State<ProfileSettings> {
         'gender': selectedGender,
       });
 
-      await analytics.logEvent(
-        name: 'profile_updated',
-        parameters: {
-          'user_id': _user?.uid ?? '',
-          'name': nameController.text,
-          'email': emailController.text,
-          'phone': phoneController.text,
-          'age': ageController.text,
-          'gender': selectedGender ?? '',
-        },
-      );
+      await AnalyticsHandler.logEvent('profile_updated', parameters: {
+        'user_id': _user?.uid ?? '',
+        'name': nameController.text,
+        'email': emailController.text,
+        'phone': phoneController.text,
+        'age': ageController.text,
+        'gender': selectedGender ?? '',
+      });
+
+      await AnalyticsHandler.logButtonClick('UpdateProfile');
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -101,13 +93,18 @@ class _ProfileSettingsState extends State<ProfileSettings> {
       context,
       MaterialPageRoute(builder: (context) => PasswordResetPage()),
     );
+    AnalyticsHandler.logButtonClick('ResetPassword');
   }
 
   @override
   Widget build(BuildContext context) {
+    AnalyticsHandler.logScreenView('ProfileSettings');
+
     return Scaffold(
       appBar: AppBar(
-        title: Center(child: Text('Profile Settings', style: TextStyle(fontWeight: FontWeight.bold))),
+        title: Center(
+            child: Text('Profile Settings',
+                style: TextStyle(fontWeight: FontWeight.bold))),
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
