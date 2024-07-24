@@ -10,11 +10,8 @@ This Flutter application provides a user profile management feature along with e
 - Phone Number Verification: Verifies phone numbers using OTP.
 - Bio-Metric Authentication: Users can LogIn using pre-registered biometrics
 - Password Reset: Allows users to reset their passwords.
-- 
 
 ## Getting Started
-
-### Prerequisites
 
 Ensure you have the following installed:
 
@@ -22,7 +19,7 @@ Ensure you have the following installed:
 - [Firebase CLI](https://firebase.google.com/docs/cli)
 - An IDE such as [Visual Studio Code](https://code.visualstudio.com/) or [Android Studio](https://developer.android.com/studio)
 
-### Setup
+### Setup 🔧
 
 1. Clone the Repository
 
