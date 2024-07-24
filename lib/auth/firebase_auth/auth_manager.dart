@@ -7,17 +7,22 @@ class AuthManager implements BaseAuthUserProvider {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
-  Future<UserCredential> createUserWithEmailAndPassword(String email, String password, String name, String phoneNumber, {int? age, String? gender}) async {
+  Future<UserCredential> createUserWithEmailAndPassword(
+      String email,
+      String password,
+      String name,
+      String phoneNumber, {
+        int? age,
+        String? gender,
+      }) async {
     try {
       UserCredential userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      // Update user display name
       await userCredential.user!.updateDisplayName(name);
 
-      // Store user details in Firestore
       Map<String, dynamic> userData = {
         'name': name,
         'email': email,
@@ -32,7 +37,7 @@ class AuthManager implements BaseAuthUserProvider {
     } on FirebaseAuthException catch (e) {
       throw FirebaseAuthException(code: e.code, message: e.message);
     } catch (e) {
-      throw e; // rethrow any other exceptions
+      throw e;
     }
   }
 
@@ -43,7 +48,7 @@ class AuthManager implements BaseAuthUserProvider {
     } on FirebaseAuthException catch (e) {
       throw FirebaseAuthException(code: e.code, message: e.message);
     } catch (e) {
-      throw e; // rethrow any other exceptions
+      throw e;
     }
   }
 
@@ -57,7 +62,6 @@ class AuthManager implements BaseAuthUserProvider {
         await user.updateEmail(email);
       }
 
-      // Update user details in Firestore
       Map<String, dynamic> userData = {
         'name': name ?? '',
         'email': email ?? '',
@@ -68,7 +72,7 @@ class AuthManager implements BaseAuthUserProvider {
 
       await _firestore.collection('users').doc(user.uid).set(userData, SetOptions(merge: true));
     } catch (e) {
-      throw e; // Or handle the error as needed
+      throw e;
     }
   }
 
@@ -83,13 +87,32 @@ class AuthManager implements BaseAuthUserProvider {
     } on FirebaseAuthException catch (e) {
       throw FirebaseAuthException(code: e.code, message: e.message);
     } catch (e) {
-      throw e; // rethrow any other exceptions
+      throw e;
     }
   }
 
   @override
-  Future<void> verifyPhoneNumber(String phoneNumber, void Function(String verificationId) codeSent, void Function(FirebaseAuthException error) verificationFailed) async {
+  Future<void> verifyPhoneNumber(
+      String phoneNumber,
+      void Function(String verificationId) codeSent,
+      void Function(FirebaseAuthException error) verificationFailed) async {
     try {
+      // Check if the phone number exists in the database
+      final QuerySnapshot result = await _firestore
+          .collection('users')
+          .where('phoneNumber', isEqualTo: phoneNumber)
+          .get();
+      final List<DocumentSnapshot> documents = result.docs;
+
+      if (documents.isEmpty) {
+        // Phone number doesn't exist in the database
+        throw FirebaseAuthException(
+          code: 'phone-not-registered',
+          message: 'Phone number is not registered. Please sign up first.',
+        );
+      }
+
+      // If phone number exists, proceed with verification
       await _firebaseAuth.verifyPhoneNumber(
         phoneNumber: phoneNumber,
         verificationCompleted: (PhoneAuthCredential credential) async {
@@ -104,10 +127,9 @@ class AuthManager implements BaseAuthUserProvider {
     } on FirebaseAuthException catch (e) {
       throw FirebaseAuthException(code: e.code, message: e.message);
     } catch (e) {
-      throw e; // rethrow any other exceptions
+      throw e;
     }
   }
-
   @override
   Future<UserCredential> signInWithPhoneNumber(String verificationId, String smsCode) async {
     try {
@@ -120,8 +142,26 @@ class AuthManager implements BaseAuthUserProvider {
     } on FirebaseAuthException catch (e) {
       throw FirebaseAuthException(code: e.code, message: e.message);
     } catch (e) {
-      throw e; // rethrow any other exceptions
+      throw e;
     }
   }
 
+  Future<void> sendEmailVerification(User user) async {
+    try {
+      await user.sendEmailVerification();
+    } on FirebaseAuthException catch (e) {
+      throw FirebaseAuthException(code: e.code, message: e.message);
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  Future<bool> isEmailVerified(User user) async {
+    try {
+      await user.reload();
+      return user.emailVerified;
+    } catch (e) {
+      throw e;
+    }
+  }
 }

@@ -12,7 +12,7 @@ class AnalyticsHandler {
     await _analytics.logScreenView(screenName: screenName);
   }
   static Future<void> logButtonClick(String buttonName) async {
-    print('Logging button click: $buttonName'); // Debug log
+
     await logEvent('button_click', parameters: {'button_name': buttonName});
   }
 }

@@ -3,7 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:sample/pages/signup.dart';
 import '../auth/firebase_auth/auth_manager.dart';
 import '../components/textfield.dart';
-
+import '../constants/styles.dart';
+import '../constants/string.dart';
 
 class ForgotPassword extends StatefulWidget {
   const ForgotPassword({super.key});
@@ -22,12 +23,12 @@ class _ForgotPasswordState extends State<ForgotPassword> {
       try {
         await _authManager.sendPasswordResetEmail(mailController.text);
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text("Password Reset Email has been sent!", style: TextStyle(fontSize: 20.0)),
+          content: Text(AppStrings.passwordResetEmailSent, style: AppStyles.snackBarText),
         ));
       } on FirebaseAuthException catch (e) {
         if (e.code == "user-not-found") {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text("No user found for that email.", style: TextStyle(fontSize: 20.0)),
+            content: Text(AppStrings.userNotFound, style: AppStyles.snackBarText),
           ));
         }
       }
@@ -41,68 +42,68 @@ class _ForgotPasswordState extends State<ForgotPassword> {
       body: Container(
         child: Column(
           children: [
-            SizedBox(height: 70.0),
+            const SizedBox(height: 70.0),
             Container(
               alignment: Alignment.topCenter,
               child: Text(
-                "Password Recovery",
-                style: TextStyle(color: Colors.white, fontSize: 30.0, fontWeight: FontWeight.bold),
+                AppStrings.passwordRecovery,
+                style: AppStyles.headingWhite,
               ),
             ),
-            SizedBox(height: 10.0),
+            const SizedBox(height: 10.0),
             Text(
-              "Enter your email",
-              style: TextStyle(color: Colors.white, fontSize: 20.0, fontWeight: FontWeight.bold),
+              AppStrings.enterEmail,
+              style: AppStyles.subheadingWhite,
             ),
             Expanded(
               child: Form(
                 key: _formKey,
                 child: Padding(
-                  padding: EdgeInsets.only(left: 10.0),
+                  padding: const EdgeInsets.only(left: 10.0),
                   child: ListView(
                     children: [
                       CustomTextField(
                         controller: mailController,
-                        hintText: "Email",
+                        hintText: AppStrings.emailHint,
                         prefixIcon: Icons.email,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please Enter Email';
+                            return AppStrings.emailRequired;
                           }
                           return null;
                         },
                       ),
-                      SizedBox(height: 40.0),
+                      const SizedBox(height: 40.0),
                       GestureDetector(
                         onTap: resetPassword,
                         child: Container(
                           width: 140,
-                          padding: EdgeInsets.all(10),
+                          padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
                           child: Center(
                             child: Text(
-                              "Send Email",
-                              style: TextStyle(color: Colors.black, fontSize: 18.0, fontWeight: FontWeight.bold),
+                              AppStrings.sendEmail,
+                              style: AppStyles.buttonText,
                             ),
                           ),
                         ),
                       ),
-                      SizedBox(height: 50.0),
+                      const SizedBox(height: 50.0),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            "Don't have an account?",
-                            style: TextStyle(fontSize: 18.0, color: Colors.white),
+                            AppStrings.dontHaveAccount,
+                            style: AppStyles.dontHaveAccountText,
                           ),
-                          SizedBox(width: 5.0),
+                          const SizedBox(width: 5.0),
                           GestureDetector(
                             onTap: () {
-                              Navigator.push(context, MaterialPageRoute(builder: (context) => SignUp()));
+                              Navigator.push(context, MaterialPageRoute(builder: (context) => const SignUp()));
                             },
                             child: Text(
-                              "Create",
-                              style: TextStyle(color: Color.fromARGB(225, 184, 166, 6), fontSize: 20.0, fontWeight: FontWeight.w500),
+                              AppStrings.create,
+                              style: AppStyles.createText,
                             ),
                           ),
                         ],

@@ -3,6 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/firebase_analytics.dart';
 import 'password_reset.dart';
+import '../constants/styles.dart';
+import '../constants/string.dart';
+import '../constants/errors.dart';
 
 class ProfileSettings extends StatefulWidget {
   @override
@@ -28,7 +31,7 @@ class _ProfileSettingsState extends State<ProfileSettings> {
     _loadProfile();
   }
 
-  Future<void> _loadProfile() async {
+  Future<void> _loadProfile() async {//load user profile from firestore
     try {
       DocumentSnapshot<Map<String, dynamic>> snapshot =
       await _firestore.collection('users').doc(_user?.uid).get();
@@ -48,13 +51,16 @@ class _ProfileSettingsState extends State<ProfileSettings> {
       }
     } catch (e) {
       print('Error loading profile: $e');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(AppErrors.profileLoadFailed),
+      ));
     }
   }
 
   Future<void> _updateProfile() async {
     try {
       await _user?.updateDisplayName(nameController.text);
-      await _user?.updateEmail(emailController.text);
+      await _user?.verifyBeforeUpdateEmail(emailController.text);
       await _firestore.collection('users').doc(_user?.uid).update({
         'name': nameController.text,
         'email': emailController.text,
@@ -75,16 +81,14 @@ class _ProfileSettingsState extends State<ProfileSettings> {
       await AnalyticsHandler.logButtonClick('UpdateProfile');
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Profile updated successfully'),
+        const SnackBar(
+          content: Text(AppStrings.profileUpdateSucesfull),
         ),
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to update profile: $e'),
-        ),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(AppErrors.profileUpdateFailed),
+      ));
     }
   }
 
@@ -93,18 +97,18 @@ class _ProfileSettingsState extends State<ProfileSettings> {
       context,
       MaterialPageRoute(builder: (context) => PasswordResetPage()),
     );
-    AnalyticsHandler.logButtonClick('ResetPassword');
+    AnalyticsHandler.logButtonClick('ResetPassword');//log when reset password button is clicked
   }
 
   @override
   Widget build(BuildContext context) {
-    AnalyticsHandler.logScreenView('ProfileSettings');
+    AnalyticsHandler.logScreenView('ProfileSettings');//log when Profile Settings button is clicked
 
     return Scaffold(
       appBar: AppBar(
         title: Center(
-            child: Text('Profile Settings',
-                style: TextStyle(fontWeight: FontWeight.bold))),
+            child: Text(AppStrings.profileSettings,
+                style: AppStyles.appBarTitle)),
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -113,53 +117,53 @@ class _ProfileSettingsState extends State<ProfileSettings> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Name',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                AppStrings.name,
+                style: AppStyles.fieldLabel,
               ),
               TextFormField(
                 controller: nameController,
                 decoration: InputDecoration(
-                  hintText: 'Enter your name',
+                  hintText: AppStrings.enterName,
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               Text(
-                'Email',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                AppStrings.email,
+                style: AppStyles.fieldLabel,
               ),
               TextFormField(
                 controller: emailController,
                 decoration: InputDecoration(
-                  hintText: 'Enter your email',
+                  hintText: AppStrings.enterEmail,
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               Text(
-                'Phone Number',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                AppStrings.phoneNumber,
+                style: AppStyles.fieldLabel,
               ),
               TextFormField(
                 controller: phoneController,
                 decoration: InputDecoration(
-                  hintText: 'Enter your phone number',
+                  hintText: AppStrings.enterPhoneNumber,
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               Text(
-                'Age',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                AppStrings.age,
+                style: AppStyles.fieldLabel,
               ),
               TextFormField(
                 controller: ageController,
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
-                  hintText: 'Enter your age',
+                  hintText: AppStrings.enterAge,
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               Text(
-                'Gender',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                AppStrings.gender,
+                style: AppStyles.fieldLabel,
               ),
               DropdownButtonFormField<String>(
                 value: selectedGender,
@@ -175,18 +179,18 @@ class _ProfileSettingsState extends State<ProfileSettings> {
                 ))
                     .toList(),
                 decoration: InputDecoration(
-                  hintText: 'Select your gender',
+                  hintText: AppStrings.selectGender,
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               TextButton(
                 onPressed: _navigateToPasswordResetPage,
-                child: Text('Reset Password'),
+                child: Text(AppStrings.resetPassword),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _updateProfile,
-                child: Text('Update Profile'),
+                child: Text(AppStrings.updateProfile),
               ),
             ],
           ),

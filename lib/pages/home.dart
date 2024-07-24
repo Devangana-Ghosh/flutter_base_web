@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api.dart';
+import '../constants/errors.dart';
 import 'Profile.dart';
-
 
 class Home extends StatefulWidget {
   @override
@@ -25,6 +25,10 @@ class _HomeState extends State<Home> {
       });
     } catch (e) {
       print('Error fetching products: $e');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        backgroundColor: Colors.orangeAccent,
+        content: Text(AppErrors.productsFetchFailed, style: const TextStyle(fontSize: 18.0)),
+      ));
     }
   }
 
@@ -45,7 +49,7 @@ class _HomeState extends State<Home> {
           ),
         ],
       ),
-      body: ListView.builder(
+      body: ListView.builder(//format ressponse
         itemCount: products.length,
         itemBuilder: (context, index) {
           dynamic product = products[index];

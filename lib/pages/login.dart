@@ -1,12 +1,14 @@
-import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import '../auth/biometric_auth/auth_service.dart';
 import '../components/textfield.dart';
 import '../services/firebase_analytics.dart';
 import 'forgot_password.dart';
 import 'login_phn.dart';
 import 'signup.dart';
-
+import '../constants/styles.dart';
+import '../constants/string.dart';
+import '../constants/errors.dart';
 
 class LogIn extends StatefulWidget {
   const LogIn({Key? key}) : super(key: key);
@@ -35,42 +37,38 @@ class _LogInState extends State<LogIn> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                "Let's get you in!",
-                style: TextStyle(
-                  color: Color(0xFF273671),
-                  fontSize: 40.0,
-                  fontWeight: FontWeight.bold,
-                ),
+                AppStrings.letsGetYouIn,
+                style: AppStyles.heading,
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: 70.0),
+              const SizedBox(height: 70.0),
               Form(
                 key: _formKey,
                 child: Column(
                   children: [
                     CustomTextField(
                       controller: mailController,
-                      hintText: "Email",
+                      hintText: AppStrings.emailHint,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please Enter Email';
+                          return AppErrors.emailEmpty;
                         }
                         return null;
                       },
                     ),
-                    SizedBox(height: 30.0),
+                    const SizedBox(height: 30.0),
                     CustomTextField(
                       controller: passwordController,
-                      hintText: "Password",
+                      hintText: AppStrings.passwordHint,
                       obscureText: true,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please Enter Password';
+                          return AppErrors.passwordEmpty;
                         }
                         return null;
                       },
                     ),
-                    SizedBox(height: 30.0),
+                    const SizedBox(height: 30.0),
                     GestureDetector(
                       onTap: () {
                         _authService.userLogin(
@@ -79,116 +77,96 @@ class _LogInState extends State<LogIn> {
                           mailController.text,
                           passwordController.text,
                         );
-                        AnalyticsHandler.logButtonClick('SignInButton');
+                        AnalyticsHandler.logButtonClick('SignInButton');//log when signIn button is clicked
                       },
                       child: Container(
                         width: MediaQuery.of(context).size.width,
-                        padding: EdgeInsets.symmetric(vertical: 13.0),
+                        padding: const EdgeInsets.symmetric(vertical: 13.0),
                         decoration: BoxDecoration(
-                          color: Color(0xFF273671),
+                          color: const Color(0xFF273671),
                           borderRadius: BorderRadius.circular(30),
                         ),
                         child: Center(
                           child: Text(
-                            "Sign In",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 22.0,
-                              fontWeight: FontWeight.w500,
-                            ),
+                            AppStrings.signInButton,
+                            style: AppStyles.buttonText,
                           ),
                         ),
                       ),
                     ),
-                    SizedBox(height: 20.0),
+                    const SizedBox(height: 20.0),
                     GestureDetector(
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => ForgotPassword()),
+                          MaterialPageRoute(builder: (context) => const ForgotPassword()),
                         );
                         AnalyticsHandler.logButtonClick('ForgotPasswordLink');
                       },
                       child: Text(
-                        "Forgot Password?",
-                        style: TextStyle(
-                          color: Color(0xFF8c8e98),
-                          fontSize: 18.0,
-                          fontWeight: FontWeight.w500,
-                        ),
+                        AppStrings.forgotPassword,
+                        style: AppStyles.linkText,
                       ),
                     ),
-                    SizedBox(height: 30.0),
-                    Row(
+                    const SizedBox(height: 30.0),
+                    const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                     ),
-                    SizedBox(height: 20.0),
+                    const SizedBox(height: 20.0),
                     GestureDetector(
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => LogInWithPhone()),
+                          MaterialPageRoute(builder: (context) => const LogInWithPhone()),
                         );
                         AnalyticsHandler.logButtonClick('LogInWithPhoneLink');
                       },
                       child: Text(
-                        "LogIn with Phone",
-                        style: TextStyle(
-                          color: Color(0xFF273671),
-                          fontSize: 20.0,
-                          fontWeight: FontWeight.w500,
-                        ),
+                        AppStrings.logInWithPhone,
+                        style: AppStyles.phoneLinkText,
                       ),
                     ),
-                    SizedBox(height: 40.0),
+                    const SizedBox(height: 40.0),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          "Don't have an account? ",
-                          style: TextStyle(
-                            color: Color(0xFF8c8e98),
-                            fontSize: 18.0,
-                            fontWeight: FontWeight.w500,
-                          ),
+                          AppStrings.dontHaveAccount,
+                          style: AppStyles.dontHaveAccountText,
                         ),
                         GestureDetector(
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => SignUp()),
+                              MaterialPageRoute(builder: (context) => const SignUp()),
                             );
                             AnalyticsHandler.logButtonClick('SignUpLink');
                           },
                           child: Text(
-                            "SignUp",
-                            style: TextStyle(
-                              color: Color(0xFF273671),
-                              fontSize: 20.0,
-                              fontWeight: FontWeight.w500,
-                            ),
+                            AppStrings.signUp,
+                            style: AppStyles.signUpText,
                           ),
                         ),
                       ],
                     ),
-                    SizedBox(height: 20.0),
+                    const SizedBox(height: 20.0),
                   ],
                 ),
               ),
-              SizedBox(height: 40.0),
+              const SizedBox(height: 40.0),
               ElevatedButton.icon(
                 onPressed: () async {
                   await _authService.authenticate(context);
                   AnalyticsHandler.logButtonClick('FingerprintAuthentication');
                 },
-                icon: Icon(Icons.fingerprint),
-                label: Text('Authenticate with Fingerprint'),
+                icon: const Icon(Icons.fingerprint),
+                label: Text(AppStrings.fingerprintAuth),
                 style: ElevatedButton.styleFrom(
-                  foregroundColor: Color(0xFF273671), backgroundColor: Colors.white,
+                  foregroundColor: const Color(0xFF273671), backgroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30.0),
                   ),
-                  padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
                 ),
               ),
             ],

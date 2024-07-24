@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../auth/firebase_auth/auth_manager.dart';
 import '../components/textfield.dart';
-import '../services/firebase_analytics.dart';
-import 'home.dart';
-import 'login.dart';
+import '../constants/string.dart';
+import '../constants/errors.dart';
 
+import 'home.dart';
 
 class SignUp extends StatefulWidget {
   const SignUp({Key? key}) : super(key: key);
@@ -15,53 +15,89 @@ class SignUp extends StatefulWidget {
 }
 
 class _SignUpState extends State<SignUp> {
-  final TextEditingController nameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController mailController = TextEditingController();
+  final TextEditingController nameController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
-
+  final TextEditingController otpController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
   final AuthManager _authManager = AuthManager();
+  bool otpSent = false;// Flag to check if OTP has been sent
+  bool emailVerified = false;
+  String verificationId = ''; // Stores the verification ID for phone authentication
 
-  void registration() async {
+  Future<void> createUserAndSendEmailVerification() async {
+    try {
+      UserCredential userCredential = await _authManager.createUserWithEmailAndPassword(
+        emailController.text,
+        passwordController.text,
+        nameController.text,
+        phoneController.text,
+      );
+
+      User user = userCredential.user!;
+      await _authManager.sendEmailVerification(user);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('${AppStrings.emailVerificationSent} ${user.email}'),
+      ));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('${AppErrors.emailVerificationFailed} $e'),
+      ));
+    }
+  }
+
+  Future<void> checkEmailVerification() async {
+    try {
+      User user = FirebaseAuth.instance.currentUser!;
+      emailVerified = await _authManager.isEmailVerified(user);
+      if (emailVerified) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(AppStrings.emailVerified),
+        ));
+        verifyPhone();// Proceed to verify phone number if email is verified
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(AppStrings.emailNotVerified),
+        ));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('${AppErrors.emailVerificationCheckFailed} $e'),
+      ));
+    }
+  }
+
+  void verifyPhone() async {
     if (_formKey.currentState!.validate()) {
+      await _authManager.verifyPhoneNumber(
+        phoneController.text,
+            (verId) {
+          setState(() {
+            otpSent = true;// Set OTP sent flag to true
+            verificationId = verId;// Save Verification ID
+          });
+        },
+            (error) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            backgroundColor: Colors.orangeAccent,
+            content: Text(error.message ?? AppErrors.phoneVerificationFailed, style: const TextStyle(fontSize: 18.0)),
+          ));
+        },
+      );
+    }
+  }
+
+  void verifyOtp() async {
+    if (otpController.text.isNotEmpty) {
       try {
-        UserCredential userCredential = await _authManager.createUserWithEmailAndPassword(
-          mailController.text,
-          passwordController.text,
-          nameController.text,
-          phoneController.text,
-        );
-
-        // Log the sign-up event
-        await AnalyticsHandler.logEvent('sign_up', parameters: {
-          'email': mailController.text,
-          'name': nameController.text,
-          'phone': phoneController.text,
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text("Registered Successfully", style: TextStyle(fontSize: 20.0)),
-        ));
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Home()));
+        await _authManager.signInWithPhoneNumber(verificationId, otpController.text);
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Home()));//Navigate to home page if verified
       } on FirebaseAuthException catch (e) {
-        String errorMessage = 'An error occurred';
-        if (e.code == 'weak-password') {
-          errorMessage = 'The password provided is too weak.';
-        } else if (e.code == 'email-already-in-use') {
-          errorMessage = 'The account already exists for that email.';
-        } else {
-          errorMessage = e.message ?? 'Error during registration';
-        }
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          backgroundColor: Colors.redAccent,
-          content: Text(errorMessage, style: TextStyle(fontSize: 18.0)),
-        ));
-      } catch (e) {
-        print(e.toString());
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          backgroundColor: Colors.redAccent,
-          content: Text('Failed to create user: $e', style: TextStyle(fontSize: 18.0)),
+          backgroundColor: Colors.orangeAccent,
+          content: Text(e.message ?? AppErrors.phoneVerificationFailed, style: const TextStyle(fontSize: 18.0)),
         ));
       }
     }
@@ -69,119 +105,157 @@ class _SignUpState extends State<SignUp> {
 
   @override
   Widget build(BuildContext context) {
-    AnalyticsHandler.logScreenView('SignUp');
-
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(20.0, 100.0, 20.0, 20.0),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20.0, 80.0, 20.0, 20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                "Let's create an account!",
-                style: TextStyle(color: Color(0xFF273671), fontSize: 40.0, fontWeight: FontWeight.bold),
+              const Text(
+                AppStrings.signUpTitle,
+                style: TextStyle(fontSize: 40.0, fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: 50.0),
+              const SizedBox(height: 50.0),
               Form(
                 key: _formKey,
                 child: Column(
                   children: [
                     CustomTextField(
-                      controller: nameController,
-                      hintText: "Name",
+                      controller: emailController,
+                      hintText: AppStrings.emailHint,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter your name';
+                          return AppErrors.pleaseEnterEmail;
                         }
                         return null;
                       },
                     ),
-                    SizedBox(height: 30.0),
-                    CustomTextField(
-                      controller: mailController,
-                      hintText: "Email",
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter an email address';
-                        } else if (!value.contains('@')) {
-                          return 'Please enter a valid email address';
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: 30.0),
-                    CustomTextField(
-                      controller: phoneController,
-                      hintText: "Phone Number",
-                      keyboardType: TextInputType.phone,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your phone number';
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: 30.0),
+                    const SizedBox(height: 20.0),
                     CustomTextField(
                       controller: passwordController,
-                      hintText: "Password",
+                      hintText: AppStrings.passwordHint,
                       obscureText: true,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter a password';
-                        } else if (value.length < 6) {
-                          return 'Password must be at least 6 characters long';
+                          return AppErrors.pleaseEnterPassword;
                         }
                         return null;
                       },
                     ),
-                    SizedBox(height: 30.0),
-                    GestureDetector(
-                      onTap: () {
-                        registration();
-                        AnalyticsHandler.logButtonClick('SignUpButton');
+                    const SizedBox(height: 20.0),
+                    CustomTextField(
+                      controller: nameController,
+                      hintText: AppStrings.nameHint,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return AppErrors.pleaseEnterName;
+                        }
+                        return null;
                       },
-                      child: Container(
-                        padding: EdgeInsets.symmetric(vertical: 13.0),
-                        decoration: BoxDecoration(
-                          color: Color(0xFF273671),
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        child: Center(
-                          child: Text(
-                            "Sign Up",
-                            style: TextStyle(color: Colors.white, fontSize: 22.0, fontWeight: FontWeight.w500),
+                    ),
+                    const SizedBox(height: 20.0),
+                    CustomTextField(
+                      controller: phoneController,
+                      hintText: AppStrings.phoneHint,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return AppErrors.pleaseEnterPhoneNumber;
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 30.0),
+                    if (!otpSent) ...[
+                      GestureDetector(
+                        onTap: () async {
+                          await createUserAndSendEmailVerification();
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: Text(AppStrings.emailVerification),
+                                content: Text(AppStrings.emailVerificationDialogContent),
+                                actions: <Widget>[
+                                  TextButton(
+                                    child: const Text(AppStrings.okButton),
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                        child: Container(
+                          width: MediaQuery.of(context).size.width,
+                          padding: const EdgeInsets.symmetric(vertical: 13.0),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF273671),
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              AppStrings.signUpButton,
+                              style: TextStyle(color: Colors.white, fontSize: 22.0, fontWeight: FontWeight.w500),
+                            ),
                           ),
                         ),
                       ),
-                    ),
+                      const SizedBox(height: 20.0),
+                      GestureDetector(
+                        onTap: checkEmailVerification,
+                        child: Container(
+                          width: MediaQuery.of(context).size.width,
+                          padding: const EdgeInsets.symmetric(vertical: 13.0),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF273671),
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              AppStrings.checkEmailVerification,
+                              style: TextStyle(color: Colors.white, fontSize: 22.0, fontWeight: FontWeight.w500),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ] else ...[
+                      CustomTextField(
+                        controller: otpController,
+                        hintText: AppStrings.otpHint,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return AppErrors.pleaseEnterOtp;
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 30.0),
+                      GestureDetector(
+                        onTap: verifyOtp,
+                        child: Container(
+                          width: MediaQuery.of(context).size.width,
+                          padding: const EdgeInsets.symmetric(vertical: 13.0),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF273671),
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              AppStrings.verifyOtp,
+                              style: TextStyle(color: Colors.white, fontSize: 22.0, fontWeight: FontWeight.w500),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
-              SizedBox(height: 30.0),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "Already have an account? ",
-                    style: TextStyle(color: Color(0xFF8c8e98), fontSize: 18.0, fontWeight: FontWeight.w500),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => LogIn()));
-                      AnalyticsHandler.logButtonClick('LogInLink');
-                    },
-                    child: Text(
-                      "LogIn",
-                      style: TextStyle(color: Color(0xFF273671), fontSize: 20.0, fontWeight: FontWeight.w500),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 20.0),
             ],
           ),
         ),

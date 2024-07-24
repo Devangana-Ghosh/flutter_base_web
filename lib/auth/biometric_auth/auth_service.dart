@@ -1,8 +1,6 @@
-
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:local_auth/local_auth.dart';
-
 import '../../pages/home.dart';
 import '../firebase_auth/auth_manager.dart';
 
