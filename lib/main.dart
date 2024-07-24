@@ -9,12 +9,12 @@ import 'pages/login.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() async {
-  //await dotenv.load(fileName: ".env");
-  //String apiKey = dotenv.env['API_KEY']!;
+  await dotenv.load(fileName: ".env");
+  String apiKey = dotenv.env['API_KEY']!;
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: FirebaseOptions(
-      API_KEY,
+      apiKey:  API_KEY,
       appId: Constants.appId,
       messagingSenderId: Constants.messagingSenderId,
       projectId: Constants.projectId,
