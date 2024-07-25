@@ -3,6 +3,7 @@ import 'package:firebase_analytics/observer.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:sample/constants.dart';
+import 'package:sample/pages/splashscreen.dart';
 import 'package:sample/services/notif_handler.dart';
 
 import 'pages/login.dart';
@@ -14,7 +15,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: FirebaseOptions(
-      apiKey:  API_KEY,
+      apiKey: API_KEY,
       appId: Constants.appId,
       messagingSenderId: Constants.messagingSenderId,
       projectId: Constants.projectId,
@@ -45,7 +46,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       navigatorKey: navigatorKey,
       navigatorObservers: <NavigatorObserver>[observer],
-      home: const LogIn(),
+      home:  SplashScreen(),
     );
   }
 }
